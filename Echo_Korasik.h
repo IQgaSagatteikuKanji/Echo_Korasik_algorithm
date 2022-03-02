@@ -138,7 +138,7 @@ size_t Echo_Korasik::search_in_string(const std::string &string){
     for(size_t i = 0; i < string.size(); i++){
         index = get_index(string[i]);
         //char current_char = string[i];
-        if(index!= OUT_OF_RANGE)
+        if(index!= OUT_OF_RANGE){
             if(ptr->alphabet[index] != nullptr) 
                 ptr = ptr->alphabet[index];
             else {
@@ -155,11 +155,11 @@ size_t Echo_Korasik::search_in_string(const std::string &string){
                     }
                     if(ptr == root) loop = false;
                 }
-            
             }
+            if(ptr->end_of_string == true) 
+                count++;           
+    }
 
-        if(ptr->end_of_string == true) 
-            count++;
     if(index == OUT_OF_RANGE) ptr = root;
     }
 
