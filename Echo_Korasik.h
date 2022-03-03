@@ -36,17 +36,29 @@ private:
 
     std::shared_ptr<TrieNode> root;
 
+    size_t calculate_finished_suffix_words(std::shared_ptr<TrieNode>);
+
     int get_index(char );
     void set_all_suffixes();
     std::weak_ptr<TrieNode> find_suffix_ptr_for_word(const std::string &);
     void handle_end_of_string(std::shared_ptr<TrieNode>);
-
+    
 
 };
 
 int Echo_Korasik::get_index(char ch){
     if(ch < ENGLISH_FIRST_LETTER || ch>(ENGLISH_FIRST_LETTER+ENGLISH_ALPHABET_SIZE)) return OUT_OF_RANGE;
     return ch - ENGLISH_FIRST_LETTER;
+}
+
+size_t Echo_Korasik::calculate_finished_suffix_words(std::shared_ptr<TrieNode> ptr){
+    size_t count = 0;
+
+    while(ptr->suffix.lock() != root){
+        ptr = ptr->suffix.lock();
+        if(ptr->end_of_string == true) count++;
+    }
+    return count;
 }
 
 std::weak_ptr<Echo_Korasik::TrieNode> Echo_Korasik::find_suffix_ptr_for_word(const std::string &word){
@@ -83,6 +95,7 @@ std::weak_ptr<Echo_Korasik::TrieNode> Echo_Korasik::find_suffix_ptr_for_word(con
 void Echo_Korasik::set_all_suffixes(){
     std::stack<std::shared_ptr<TrieNode>> nodes;
     std::stack<std::string> strs;
+    std::stack<size_t> words_finished;
     std::shared_ptr<TrieNode> ptr;
     std::string string;
     nodes.push(root);
@@ -92,6 +105,7 @@ void Echo_Korasik::set_all_suffixes(){
         string = strs.top();
         nodes.pop();
         strs.pop();
+
 
         for(size_t i = 0; i< ENGLISH_ALPHABET_SIZE; i++){
             if(ptr->alphabet[i] != nullptr){
@@ -139,14 +153,15 @@ size_t Echo_Korasik::search_in_string(const std::string &string){
         index = get_index(string[i]);
         //char current_char = string[i];
         if(index!= OUT_OF_RANGE){
-            if(ptr->alphabet[index] != nullptr) 
+            if(ptr->alphabet[index] != nullptr) {
                 ptr = ptr->alphabet[index];
+                count+= calculate_finished_suffix_words(ptr);
+            }
             else {
                 bool loop = true;
                 while(loop){
                     ptr = ptr->suffix.lock();
                     if(ptr->end_of_string == true) {
-                        count++;
                         handle_end_of_string(ptr);
                     }
                     if(ptr->alphabet[index] != nullptr){
@@ -157,7 +172,7 @@ size_t Echo_Korasik::search_in_string(const std::string &string){
                 }
             }
             if(ptr->end_of_string == true) 
-                count++;           
+                count++;         
     }
 
     if(index == OUT_OF_RANGE) ptr = root;
